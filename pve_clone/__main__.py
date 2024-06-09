@@ -63,6 +63,8 @@ def main():
     print("Searching for pairs...")
     pairs: list[tuple[str, str, str, str]] = []
     for c_name, c_location in cameras:
+        if c_name == "USB3 Video":
+            continue
         for i_name, i_location in inputs:
             c_name_digits = re.sub(r"[^\d]", "", c_name)
             if c_name_digits in i_name:
