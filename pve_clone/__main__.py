@@ -8,8 +8,7 @@ from serial import Serial
 
 def find_all_cameras():
     print("Searching for camera devices...")
-    cameras: list[tuple[str, str]] = []
-    found: set[str] = set()
+    camera_map: dict[str, tuple[str, str]] = {}
     res = subprocess.run(
         ["dmesg"], text=True, stdout=subprocess.PIPE, check=True
     )
@@ -19,11 +18,9 @@ def find_all_cameras():
         )
         if match is not None:
             location, name = match.groups()
-            # remove duplicates
-            if location not in found:
-                found.add(location)
-                print(f"Found {name} {location}")
-                cameras.append((name, location))
+            camera_map[name] = name, location
+            print(f"Found {name} {location}")
+    cameras = list(camera_map.values())
     print(f"{len(cameras)} cameras found.")
     return cameras
 
@@ -77,8 +74,8 @@ def main():
     mother_vm = input("Mother VM ID: ")
     vm_count = int(input("Number of VMs to clone: "))
     per_vm = int(input("Number of device pairs per VM: "))
-    ignore = input("Devices to ignore: ").split(",")
-    ignore = [i.strip() for i in ignore]
+    ignore = input("Devices to ignore: ").strip().split(",")
+    ignore = [i.strip() for i in ignore if i.strip()]
     pairs = [p for p in pairs if not any([i in p[0] for i in ignore])]
 
     if vm_count * per_vm > len(pairs):
