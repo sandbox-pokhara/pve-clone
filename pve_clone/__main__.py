@@ -87,6 +87,7 @@ def main():
         for p in pairs
         if not any([p[1].startswith(i) for i in buses_to_ignore])
     ]
+    start = input("Start after clone (y/n): ").strip().lower() == "y"
 
     if device_limit > 0:
         pairs = pairs[:device_limit]
@@ -124,6 +125,10 @@ def main():
             ]
             subprocess.run(cmd, check=True)
             i += 1
+        if start:
+            print(f"Starting...")
+            cmd = ["qm", "start", new_vm]
+            subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":
