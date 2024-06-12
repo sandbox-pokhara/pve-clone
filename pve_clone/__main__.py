@@ -70,32 +70,40 @@ def main():
     for p in pairs:
         print(f"{p[0]} {p[1]:9} {p[2]} {p[3]:9}")
     print(f"{len(pairs)} pairs found.")
-    buses = sorted(set([int(p[1].split("-")[0]) for p in pairs]))
 
     mother_vm = input("Mother VM ID: ")
-    bus_str = ", ".join([str(b) for b in buses])
-    buses_to_clone = input(f"Buses to clone ({bus_str}): ").strip().split(",")
-    for b in buses_to_clone:
-        if int(b) not in buses:
-            print(f"Bus {b} does not exist.")
-            exit(1)
-    per_bus = int(input("Number of device pairs per bus: "))
-    ignore = input("Devices to ignore: ").strip().split(",")
-    ignore = [i.strip() for i in ignore if i.strip()]
-    pairs = [p for p in pairs if not any([i in p[0] for i in ignore])]
+    per_vm = int(input("Number of device pairs per vm: "))
+    device_limit = int(input("Device pair limit, 0=no limit: "))
 
-    for bus in buses_to_clone:
-        devices_in_bus = [p for p in pairs if p[1].startswith(bus)][:per_bus]
+    buses_to_ignore = input(f"Buses to ignore: ").strip().split(",")
+    buses_to_ignore = [i.strip() for i in buses_to_ignore if i.strip()]
+    devices_to_ignore = input("Devices to ignore: ").strip().split(",")
+    devices_to_ignore = [i.strip() for i in devices_to_ignore if i.strip()]
+    pairs = [
+        p for p in pairs if not any([i in p[0] for i in devices_to_ignore])
+    ]
+    pairs = [
+        p
+        for p in pairs
+        if not any([p[1].startswith(i) for i in buses_to_ignore])
+    ]
+
+    if device_limit > 0:
+        pairs = pairs[:device_limit]
+
+    while pairs:
+        vm_devices = pairs[:per_vm]
+        pairs = pairs[per_vm:]
         print("Cloning...")
-        start = re.sub(r"[^\d]", "", devices_in_bus[0][0])
-        end = re.sub(r"[^\d]", "", devices_in_bus[-1][0])
+        start = re.sub(r"[^\d]", "", vm_devices[0][0])
+        end = re.sub(r"[^\d]", "", vm_devices[-1][0])
         vm_name = start + "-" + end
         new_vm = find_next_vm_id()
         subprocess.run(
             ["qm", "clone", mother_vm, new_vm, "--name", vm_name], check=True
         )
         i = 0
-        for c_name, c_location, i_name, i_location in devices_in_bus:
+        for c_name, c_location, i_name, i_location in vm_devices:
             print(f"Adding camera USB device: {c_name} {c_location}")
             cmd = [
                 "qm",
