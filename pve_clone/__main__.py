@@ -64,8 +64,10 @@ def main():
             continue
         for i_name, i_location in inputs:
             c_name_digits = re.sub(r"[^\d]", "", c_name)
-            if c_name_digits in i_name:
+            i_name_digits = re.sub(r"[^\d]", "", i_name[4:])
+            if c_name_digits == i_name_digits:
                 pairs.append((c_name, c_location, i_name, i_location))
+                break
     pairs.sort(key=lambda p: int(re.sub(r"[^\d]", "", p[0])))
     for p in pairs:
         print(f"{p[0]} {p[1]:9} {p[2]} {p[3]:9}")
